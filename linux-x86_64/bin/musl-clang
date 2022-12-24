@@ -1,0 +1,31 @@
+#!/bin/sh
+cc="clang"
+libc="/build/musl/linux-x86_64"
+libc_inc="${libc}/include"
+libc_lib="${libc}/lib64"
+crt1="${libc_lib}/crt1.o"
+crti="${libc_lib}/crti.o"
+crtbegin="/usr/lib/clang/15.0.6/lib/linux/clang_rt.crtbegin-x86_64.o"
+builtins="/usr/lib/clang/15.0.6/lib/linux/libclang_rt.builtins-x86_64.a"
+crtn="${libc_lib}/crtn.o"
+crtend="/usr/lib/clang/15.0.6/lib/linux/clang_rt.crtend-x86_64.o"
+
+# NOTE: remove
+#  -isystem "/usr/lib/clang/15.0.6/include"
+# before building LLVM runtimes
+
+exec "$cc" \
+    -static \
+    -nostdinc \
+    -nostdlib \
+    \
+    -isystem "/usr/lib/clang/15.0.6/include" \
+    -isystem "$libc_inc" \
+    -isystem "/usr/include" \
+    -Wl,--as-needed \
+    -L"$libc_lib" "$crt1" "$crti" "$crtbegin" "$builtins" "${libc_lib}/libc.a" \
+    -L-user-start \
+    "$@" \
+    -L-user-end \
+    "$crtend" \
+    "$crtn"
